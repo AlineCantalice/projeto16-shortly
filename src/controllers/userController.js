@@ -22,3 +22,24 @@ export async function signUp(req, res) {
 
   res.sendStatus(201)
 }
+
+export async function signIn(req, res) {
+  const user = req.body
+
+  const {
+    rows: userDb,
+  } = await connection.query('SELECT * FROM users WHERE email=$1', [user.email])
+
+  if (userDb[0] && bcrypt.compareSync(user.password, userDb[0].password)) {
+    const token = uuid()
+
+    await connection.query(
+      'INSERT INTO session ("userId", token) VALUES ($1, $2)',
+      [userDb[0].id, token],
+    )
+
+    return res.status(200).send(token)
+  } else {
+    return res.status(401).send('E-mail ou senha incorretos!!')
+  }
+}
