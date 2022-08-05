@@ -44,8 +44,10 @@ export async function createShortUrl(req, res) {
 export async function getUrlById(req, res) {
   const { id } = req.params
 
-  const { rows: url } = await connection.query(
-    'SELECT id, "shortUrl", url FROM urls WHERE id=$1',
+  const {
+    rows: url,
+  } = await connection.query(
+    'SELECT * FROM urls WHERE id=$1',
     [id],
   )
 
@@ -54,4 +56,27 @@ export async function getUrlById(req, res) {
   }
 
   res.status(200).send(url[0])
+}
+
+export async function redirectToUrl(req, res) {
+  const { shortUrl } = req.params
+
+  const {
+    rows: urlDb,
+  } = await connection.query('SELECT * FROM urls WHERE "shortUrl"=$1', [
+    shortUrl,
+  ])
+
+  if (!urlDb[0]) {
+    return res.status(404).send('ShortUrl não existe!!')
+  }
+
+  const newCount = urlDb[0].visitCount + 1
+
+  await connection.query('UPDATE urls SET "visitCount"=$1 WHERE id=$2', [
+    newCount,
+    urlDb[0].id,
+  ])
+
+  return res.redirect(urlDb[0].url)
 }
