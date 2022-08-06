@@ -5,13 +5,19 @@ export async function createShortUrl(req, res) {
   const { url } = req.body
   const { authorization } = req.headers
 
+  if (!authorization) {
+    return res.status(401).send('Usuário não autenticado!!')
+  }
+
   const token = authorization.split(' ')
 
   const {
     rows: session,
-  } = await connection.query('SELECT * FROM session WHERE token=$1', [token[1]])
+  } = await connection.query('SELECT * FROM sessions WHERE token=$1', [
+    token[1],
+  ])
 
-  if (!authorization || !session[0]) {
+  if (!session[0]) {
     return res.status(401).send('Faça o login novamente!!')
   }
 
@@ -44,9 +50,7 @@ export async function createShortUrl(req, res) {
 export async function getUrlById(req, res) {
   const { id } = req.params
 
-  const {
-    rows: url,
-  } = await connection.query(
+  const { rows: url } = await connection.query(
     'SELECT * FROM urls WHERE id=$1',
     [id],
   )
@@ -79,4 +83,41 @@ export async function redirectToUrl(req, res) {
   ])
 
   return res.redirect(urlDb[0].url)
+}
+
+export async function deleteUrl(req, res) {
+  const { id } = req.params
+  const { authorization } = req.headers
+
+  if (!authorization) {
+    return res.status(401).send('Usuário não autenticado!!')
+  }
+
+  const token = authorization.split(' ')
+
+  const {
+    rows: session,
+  } = await connection.query('SELECT * FROM sessions WHERE token=$1', [
+    token[1],
+  ])
+
+  if (!session[0]) {
+    return res.status(401).send('Faça o login novamente!!')
+  }
+
+  const {
+    rows: userUrl,
+  } = await connection.query('SELECT * FROM urls WHERE id=$1', [id])
+
+  if (!userUrl[0]) {
+    return res.status(404).send('Essa url não existe!!!')
+  }
+
+  if (userUrl[0].userId !== session[0].userId) {
+    return res.status(401).send('Você não tem permissão para excluir a url!!!')
+  }
+
+  await connection.query('DELETE FROM urls WHERE id=$1', [id])
+
+  return res.status(204).send('Url deletada com sucesso!')
 }
