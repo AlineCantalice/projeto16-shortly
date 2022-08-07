@@ -9,12 +9,12 @@ export async function createShortUrl(req, res) {
     return res.status(401).send('Usuário não autenticado!!')
   }
 
-  const token = authorization.split(' ')
+  const token = authorization.replace('Bearer ', '')
 
   const {
     rows: session,
   } = await connection.query('SELECT * FROM sessions WHERE token=$1', [
-    token[1],
+    token,
   ])
 
   if (!session[0]) {
@@ -93,12 +93,12 @@ export async function deleteUrl(req, res) {
     return res.status(401).send('Usuário não autenticado!!')
   }
 
-  const token = authorization.split(' ')
+  const token = authorization.replace('Bearer ', '')
 
   const {
     rows: session,
   } = await connection.query('SELECT * FROM sessions WHERE token=$1', [
-    token[1],
+    token,
   ])
 
   if (!session[0]) {

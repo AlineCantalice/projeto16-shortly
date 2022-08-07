@@ -45,18 +45,18 @@ export async function signIn(req, res) {
 }
 
 export async function getUserData(req, res) {
-  /*const { authorization } = req.headers
+  const { authorization } = req.headers
 
   if (!authorization) {
     return res.status(401).send('Usuário não autenticado!!')
   }
 
-  const token = authorization.split(' ')
+  const token = authorization.replace('Bearer ', '')
 
   const {
     rows: session,
-  } = await connection.query('SELECT * FROM sessions WHERE token=$1', [
-    token[1],
+  } = await connection.query('SELECT "userId" FROM sessions WHERE token=$1', [
+    token,
   ])
 
   if (!session[0]) {
@@ -65,7 +65,7 @@ export async function getUserData(req, res) {
 
   const {
     rows: user,
-  } = await connection.query('SELECT * FROM users WHERE id=$1', [
+  } = await connection.query('SELECT id, name FROM users WHERE id=$1', [
     session[0].userId,
   ])
 
@@ -73,32 +73,33 @@ export async function getUserData(req, res) {
     return res.status(404).send('Usuário inválido!!')
   }
 
-  const { rows: data } = await connection.query(
-    'SELECT u.id, u.name, COUNT(ur."visitCount") AS "visitCount" FROM users u JOIN urls ur ON u.id=ur."userId" GROUP BY u.id', [user.id]
+  const {
+    rows: visitCount,
+  } = await connection.query(
+    'SELECT SUM("visitCount") AS sum FROM urls WHERE urls."userId"=$1',
+    [user[0].id],
   )
-
-  console.log(data)
 
   const {
     rows: urls,
   } = await connection.query(
-    'SELECT id, "shortUrl", url, "visitCount" FROM urls WHERE "userId"=$1',
+    'SELECT id, "shortUrl", url, "visitCount" FROM urls WHERE "userId"=$1 GROUP BY id',
     [user[0].id],
   )
 
   const body = {
     id: user[0].id,
     name: user[0].name,
-    //visitCount: data[0].visitCount,
+    visitCount: visitCount[0].sum,
     shortenedUrls: urls,
   }
 
-  return res.status(200).send(body)*/
+  return res.status(200).send(body)
 }
 
 export async function getRanking(req, res) {
   const { rows: ranking } = await connection.query(
-    'SELECT users.id, users.name, COUNT(urls."userId") AS "linksCount", COUNT(urls."visitCount") AS "visitCount" FROM users JOIN urls ON users.id=urls."userId" GROUP BY users.id ORDER BY "visitCount" LIMIT 10',
+    'SELECT users.id, users.name, SUM(urls."userId") AS "linksCount", SUM(urls."visitCount") AS "visitCount" FROM users LEFT JOIN urls ON users.id=urls."userId" GROUP BY users.id ORDER BY "visitCount" LIMIT 10',
   )
 
   res.status(200).send(ranking)
