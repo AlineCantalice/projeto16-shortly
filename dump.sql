@@ -157,7 +157,6 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 --
 
 COPY public.sessions (id, "userId", token, "createdAt") FROM stdin;
-1	1	4404fbae-b56e-4ab8-8b28-49f944233d44	2022-08-06
 \.
 
 
@@ -166,7 +165,6 @@ COPY public.sessions (id, "userId", token, "createdAt") FROM stdin;
 --
 
 COPY public.urls (id, "userId", url, "shortUrl", "visitCount", "createdAt") FROM stdin;
-3	1	https://www.google.com/search?q=imagem+url&tbm=isch&ved=2ahUKEwjGwbKnm7D5AhVtMrkGHQ1fCzwQ2-cCegQIABAA&oq=imagem+url&gs_lcp=CgNpbWcQAzIGCAAQHhAIOgQIIxAnOgUIABCABDoGCAAQHhAHOgQIABAeUKkGWPcQYLYTaABwAHgAgAHtAYgBnQiSAQUwLjIuM5gBAKABAaoBC2d3cy13aXotaW1nwAEB&sclient=img&ei=xFHtYsbPHu3k5OUPjb6t4AM&bih=636&biw=1318	uQEQchHmXC	2	2022-08-06
 \.
 
 
@@ -175,7 +173,6 @@ COPY public.urls (id, "userId", url, "shortUrl", "visitCount", "createdAt") FROM
 --
 
 COPY public.users (id, name, email, password, "createdAt") FROM stdin;
-1	João	joao@driven.com.br	$2b$10$Iu3AHELpa6.uZrH042BfM.SEdN0wf/3/KJ.eGK0oI0az9d5yfO0Pi	2022-08-06
 \.
 
 
@@ -183,7 +180,7 @@ COPY public.users (id, name, email, password, "createdAt") FROM stdin;
 -- Name: sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.sessions_id_seq', 1, true);
+SELECT pg_catalog.setval('public.sessions_id_seq', 5, true);
 
 
 --
@@ -197,7 +194,7 @@ SELECT pg_catalog.setval('public.urls_id_seq', 3, true);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 1, true);
+SELECT pg_catalog.setval('public.users_id_seq', 3, true);
 
 
 --
@@ -222,14 +219,6 @@ ALTER TABLE ONLY public.sessions
 
 ALTER TABLE ONLY public.urls
     ADD CONSTRAINT urls_pkey PRIMARY KEY (id);
-
-
---
--- Name: urls urls_url_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.urls
-    ADD CONSTRAINT urls_url_key UNIQUE (url);
 
 
 --
