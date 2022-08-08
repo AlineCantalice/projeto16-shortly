@@ -13,9 +13,7 @@ export async function createShortUrl(req, res) {
 
   const {
     rows: session,
-  } = await connection.query('SELECT * FROM sessions WHERE token=$1', [
-    token,
-  ])
+  } = await connection.query('SELECT * FROM sessions WHERE token=$1', [token])
 
   if (!session[0]) {
     return res.status(401).send('Faça o login novamente!!')
@@ -23,17 +21,20 @@ export async function createShortUrl(req, res) {
 
   const {
     rows: existUrl,
-  } = await connection.query('SELECT * FROM urls WHERE url=$1', [url])
+  } = await connection.query(
+    'SELECT * FROM urls WHERE url=$1 AND "userId"=$2',
+    [url, session[0].userId],
+  )
 
   if (existUrl[0]) {
     const body = {
       shortUrl: existUrl[0].shortUrl,
     }
 
-    return res.status(201).send(body)
+    return res.status(200).send(body)
   }
 
-  const shortUrl = nanoid(10)
+  const shortUrl = nanoid(8)
 
   await connection.query(
     'INSERT INTO urls ("userId", url, "shortUrl") VALUES ($1, $2, $3)',
@@ -51,7 +52,7 @@ export async function getUrlById(req, res) {
   const { id } = req.params
 
   const { rows: url } = await connection.query(
-    'SELECT * FROM urls WHERE id=$1',
+    'SELECT id, "shortUrl", url FROM urls WHERE id=$1',
     [id],
   )
 
@@ -97,9 +98,7 @@ export async function deleteUrl(req, res) {
 
   const {
     rows: session,
-  } = await connection.query('SELECT * FROM sessions WHERE token=$1', [
-    token,
-  ])
+  } = await connection.query('SELECT * FROM sessions WHERE token=$1', [token])
 
   if (!session[0]) {
     return res.status(401).send('Faça o login novamente!!')

@@ -33,6 +33,10 @@ export async function signIn(req, res) {
   if (userDb[0] && bcrypt.compareSync(user.password, userDb[0].password)) {
     const token = uuid()
 
+    await connection.query('DELETE FROM sessions WHERE "userId"=$1', [
+      userDb[0].id,
+    ])
+
     await connection.query(
       'INSERT INTO sessions ("userId", token) VALUES ($1, $2)',
       [userDb[0].id, token],
@@ -90,7 +94,7 @@ export async function getUserData(req, res) {
   const body = {
     id: user[0].id,
     name: user[0].name,
-    visitCount: visitCount[0].sum,
+    visitCount: urls.length==0 ? 0 : visitCount[0].sum,
     shortenedUrls: urls,
   }
 
@@ -99,7 +103,7 @@ export async function getUserData(req, res) {
 
 export async function getRanking(req, res) {
   const { rows: ranking } = await connection.query(
-    'SELECT users.id, users.name, SUM(urls."userId") AS "linksCount", SUM(urls."visitCount") AS "visitCount" FROM users LEFT JOIN urls ON users.id=urls."userId" GROUP BY users.id ORDER BY "visitCount" LIMIT 10',
+    'SELECT users.id, users.name, COUNT(urls."userId") AS "linksCount", SUM(urls."visitCount") AS "visitCount" FROM users LEFT JOIN urls ON users.id=urls."userId" GROUP BY users.id ORDER BY "visitCount" DESC LIMIT 10',
   )
 
   res.status(200).send(ranking)
